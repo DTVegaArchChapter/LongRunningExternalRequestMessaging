@@ -1,3 +1,3 @@
 # System design
 
-![design](/design.png "design") .
+![design](/Scenario1/design.png "design")
