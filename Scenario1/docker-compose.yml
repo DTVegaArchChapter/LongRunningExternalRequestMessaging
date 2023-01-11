@@ -1,0 +1,71 @@
+version: '3.4'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: always
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+
+  searchapi:
+    image: ${DOCKER_REGISTRY-}searchapi
+    depends_on:
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: SearchApi/Dockerfile
+
+  searchhandler1:
+    image: ${DOCKER_REGISTRY-}searchhandler1
+    depends_on:
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: SearchHandler/Dockerfile
+    environment:
+      - HttpClientTimeout=60000
+      - PrefetchCount=10
+
+  searchhandler2:
+    image: ${DOCKER_REGISTRY-}searchhandler2   
+    depends_on:
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: SearchHandler/Dockerfile
+    environment:
+      - HttpClientTimeout=60000
+      - PrefetchCount=10
+
+  searchhandler3:
+    image: ${DOCKER_REGISTRY-}searchhandler3
+    depends_on:
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: SearchHandler/Dockerfile
+    environment:
+      - HttpClientTimeout=60000
+      - PrefetchCount=10
+
+  searchtargetapi1:
+    image: ${DOCKER_REGISTRY-}searchtargetapi1
+    build:
+      context: .
+      dockerfile: SearchTargetApi/Dockerfile
+    environment:
+    - StoreId=1
+    - Duration=10000
+
+  notificationapi:
+    image: ${DOCKER_REGISTRY-}notificationapi
+    build:
+      context: .
+      dockerfile: NotificationApi/Dockerfile
+
+volumes:
+  rabbitmq:
+    driver: local
