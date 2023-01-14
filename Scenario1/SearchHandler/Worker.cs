@@ -6,6 +6,7 @@ using RabbitMQ.Client.Events;
 using System.Text.Json;
 using System.Text;
 using System.Net.Http;
+using System.Net.Http.Json;
 
 public class Worker : BackgroundService
 {
@@ -44,7 +45,10 @@ public class Worker : BackgroundService
 
                             using var response = await _httpClient.GetAsync($"http://searchtargetapi1/search-product/{id}", stoppingToken);
                             response.EnsureSuccessStatusCode();
-                            var responseBody = await response.Content.ReadAsStringAsync(stoppingToken);
+                            var responseBody = await response.Content.ReadFromJsonAsync<decimal>(cancellationToken: stoppingToken);
+
+                            using var notificationResponse = await _httpClient.PostAsJsonAsync("http://notificationapi/notify-clients", responseBody, stoppingToken);
+                            notificationResponse.EnsureSuccessStatusCode();
 
                             _logger.LogInformation($"result: {responseBody}");
 

@@ -18,14 +18,27 @@
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
+import { HubConnectionBuilder } from '@microsoft/signalr';
 
 @Options({})
 export default class HomeView extends Vue {
   selectedProduct = ""
 
+  mounted() {
+    const connection = new HubConnectionBuilder()
+      .withUrl("http://localhost:60359/notificationHub")
+      .build();
+
+    connection.on("ReceivePrice", data => {
+        console.log(data);
+    });
+
+    connection.start();
+  }
+
   search(): void {
     if (this.selectedProduct) {
-      fetch(`http://localhost:54484/search-product/${this.selectedProduct}`)
+      fetch(`http://localhost:60361/search-product/${this.selectedProduct}`)
     }
   }
 }
