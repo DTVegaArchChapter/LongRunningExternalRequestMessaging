@@ -31,7 +31,6 @@ services:
     ports:
       - "80"
 
-
   notificationapi:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
