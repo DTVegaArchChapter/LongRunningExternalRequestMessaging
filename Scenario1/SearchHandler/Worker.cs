@@ -18,6 +18,8 @@ public class Worker : BackgroundService
 
     private static readonly HttpClient _httpClient = new();
 
+    private sealed record ProductInfo(string Store, string Name, decimal Price);
+
     public Worker(ILogger<Worker> logger, IConnection connection, IConfiguration configuration)
     {
         _logger = logger;
@@ -41,16 +43,12 @@ public class Worker : BackgroundService
                         {
                             var id = JsonSerializer.Deserialize<int>(Encoding.UTF8.GetString(e.Body.Span));
 
-                            _logger.LogInformation($"q: {id}");
-
                             using var response = await _httpClient.GetAsync($"http://searchtargetapi1/search-product/{id}", stoppingToken);
                             response.EnsureSuccessStatusCode();
-                            var responseBody = await response.Content.ReadFromJsonAsync<decimal>(cancellationToken: stoppingToken);
+                            var responseBody = await response.Content.ReadFromJsonAsync<ProductInfo>(cancellationToken: stoppingToken);
 
-                            using var notificationResponse = await _httpClient.PostAsJsonAsync("http://notificationapi/notify-clients", responseBody, stoppingToken);
+                            using var notificationResponse = await _httpClient.PostAsJsonAsync("http://notificationapi/notify-clients", new[] { responseBody }, stoppingToken);
                             notificationResponse.EnsureSuccessStatusCode();
-
-                            _logger.LogInformation($"result: {responseBody}");
 
                             model.BasicAck(e.DeliveryTag, false);
                         }

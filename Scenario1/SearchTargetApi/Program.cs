@@ -146,14 +146,16 @@ app.MapGet("/search-product/{id}", (ProductType id, IConfiguration configuration
         Thread.Sleep(configuration.GetValue("Duration", 2_000));
         
         var storeId = configuration.GetValue("StoreId", 1);
-        return products[storeId][id];
+        return new ProductInfo($"Store {storeId}", id.ToString(), products[storeId][id]);
     });
 
 app.Run();
 
 internal enum ProductType
 {
-    CellPhone,
-    Laptop,
-    Desktop
+    CellPhone = 1,
+    Laptop = 2,
+    Desktop = 3
 }
+
+internal record ProductInfo(string Store, string Name, decimal Price);
