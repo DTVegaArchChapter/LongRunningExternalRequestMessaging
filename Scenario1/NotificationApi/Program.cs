@@ -16,10 +16,10 @@ app.UseCors(
         });
 
 app.MapHub<NotificationHub>("/notificationHub");
-app.MapPost("/notify-clients", (HttpContext httpContext, [FromBody]decimal price) =>
+app.MapPost("/notify-clients", (HttpContext httpContext, [FromBody]ProductInfo[] productInfo) =>
     {
         var hubContext = httpContext.RequestServices.GetRequiredService<IHubContext<NotificationHub>>();
-        return hubContext.Clients.All.SendAsync("ReceivePrice", price);
+        return hubContext.Clients.All.SendAsync("ReceivePrice", productInfo);
     });
 app.Run();
 
@@ -30,3 +30,5 @@ public class NotificationHub : Hub
         await Clients.All.SendAsync("ReceiveMessage", user, message);
     }
 }
+
+internal record ProductInfo(string Store, string Name, decimal Price);
