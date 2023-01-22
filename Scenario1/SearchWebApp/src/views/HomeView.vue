@@ -1,4 +1,5 @@
 <template>
+ <loading v-model:active="isLoading" :is-full-page="true" />
  <div class="container">
   <div class="row">
     <div class="m-2">
@@ -39,17 +40,23 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import { HubConnectionBuilder } from '@microsoft/signalr';
-
+import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/css/index.css';
 interface ProductInfo {
     store: string;
     name: string;
     price: number;
 }
 
-@Options({})
+@Options({
+  components: {
+    Loading
+  }
+})
 export default class HomeView extends Vue {
   selectedProduct = "";
   searchResult: ProductInfo[] = [];
+  isLoading = false;
 
   mounted() {
     const connection = new HubConnectionBuilder()
@@ -59,6 +66,7 @@ export default class HomeView extends Vue {
     connection.on("ReceivePrice", (data: ProductInfo[]) => {
         this.searchResult = [];
         this.searchResult.push(...data);
+        this.isLoading = false;
     });
 
     connection.start();
@@ -66,6 +74,7 @@ export default class HomeView extends Vue {
 
   search(): void {
     if (this.selectedProduct) {
+      this.isLoading = true;
       fetch(`http://localhost:8081/search-product/${this.selectedProduct}`)
     }
   }
