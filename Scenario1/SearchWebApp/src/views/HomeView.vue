@@ -10,7 +10,7 @@
           <option value="2">Laptop</option>
           <option value="3">Desktop</option>
         </select>
-        <button @click="search" class="btn btn-outline-primary" type="button" id="button-search">Search</button>
+        <button @click="search" class="btn btn-outline-primary" type="button" id="button-search" :disabled="isSeachButtonDisabled">Search</button>
       </div>
      </div>
   </div>
@@ -57,25 +57,34 @@ export default class HomeView extends Vue {
   selectedProduct = "";
   searchResult: ProductInfo[] = [];
   isLoading = false;
+  isSeachButtonDisabled = true;
+  requestId = "";
 
   mounted() {
+    this.connectToNotificationHub();
+  }
+
+  private async connectToNotificationHub() {
+    const response = await fetch(`http://localhost:8082/get-new-guid`);
+    this.requestId = await response.text();
     const connection = new HubConnectionBuilder()
-      .withUrl("http://localhost:8082/notificationHub")
+      .withUrl(`http://localhost:8082/notificationHub?request-id=${this.requestId}`)
       .build();
 
     connection.on("ReceivePrice", (data: ProductInfo[]) => {
-        this.searchResult = [];
-        this.searchResult.push(...data);
-        this.isLoading = false;
+      this.searchResult = [];
+      this.searchResult.push(...data);
+      this.isLoading = false;
     });
 
-    connection.start();
+    await connection.start();
+    this.isSeachButtonDisabled = false;
   }
 
   search(): void {
     if (this.selectedProduct) {
       this.isLoading = true;
-      fetch(`http://localhost:8081/search-product/${this.selectedProduct}`)
+      fetch(`http://localhost:8081/search-product/${this.selectedProduct}/${this.requestId}`)
     }
   }
 }

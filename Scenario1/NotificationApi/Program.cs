@@ -16,18 +16,26 @@ app.UseCors(
         });
 
 app.MapHub<NotificationHub>("/notificationHub");
-app.MapPost("/notify-clients", (HttpContext httpContext, [FromBody]ProductInfo[] productInfo) =>
+app.MapPost("/notify-clients/{requestId}", (HttpContext httpContext, string requestId, [FromBody]ProductInfo[] productInfo) =>
     {
         var hubContext = httpContext.RequestServices.GetRequiredService<IHubContext<NotificationHub>>();
-        return hubContext.Clients.All.SendAsync("ReceivePrice", productInfo);
+        return hubContext.Clients.Group(requestId).SendAsync("ReceivePrice", productInfo);
     });
+app.MapGet("/get-new-guid", () => Guid.NewGuid().ToString("N"));
 app.Run();
 
 public class NotificationHub : Hub
 {
-    public async Task SendMessage(string user, string message)
+    public override async Task OnConnectedAsync()
     {
-        await Clients.All.SendAsync("ReceiveMessage", user, message);
+        await Groups.AddToGroupAsync(Context.ConnectionId, Context.GetHttpContext()!.Request.Query["request-id"]!);
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, Context.GetHttpContext()!.Request.Query["request-id"]!);
+        await base.OnDisconnectedAsync(exception);
     }
 }
 
