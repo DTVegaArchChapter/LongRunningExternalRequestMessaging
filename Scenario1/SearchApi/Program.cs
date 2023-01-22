@@ -18,7 +18,7 @@ app.UseCors(
             b.AllowAnyOrigin();
         });
 
-app.MapGet("/search-product/{id}", (int id, IConnection connection) =>
+app.MapGet("/search-product/{id}/{requestId}", (int id, string requestId, IConnection connection) =>
     {
         using (var channel = connection.CreateModel())
         {
@@ -27,10 +27,12 @@ app.MapGet("/search-product/{id}", (int id, IConnection connection) =>
                 "",
                 "Search",
             null,
-                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(id)));
+                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new SearchInfo(id, requestId))));
         }
 
         return Results.Ok();
     });
 
 app.Run();
+
+internal record SearchInfo(int ProductId, string RequestId);
