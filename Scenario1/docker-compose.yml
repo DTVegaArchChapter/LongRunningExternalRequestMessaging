@@ -10,6 +10,23 @@ services:
     volumes:
       - rabbitmq:/var/lib/rabbitmq
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD=Password1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+
   searchapi:
     image: ${DOCKER_REGISTRY-}searchapi
     depends_on:
@@ -68,4 +85,6 @@ services:
 
 volumes:
   rabbitmq:
+    driver: local
+  elasticsearch:
     driver: local
