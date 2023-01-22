@@ -83,6 +83,12 @@ services:
       context: .
       dockerfile: NotificationApi/Dockerfile
 
+  logapi:
+    image: ${DOCKER_REGISTRY-}logapi
+    build:
+      context: .
+      dockerfile: LogApi/Dockerfile
+
 volumes:
   rabbitmq:
     driver: local

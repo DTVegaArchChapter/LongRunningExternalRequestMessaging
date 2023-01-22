@@ -37,3 +37,10 @@ services:
     ports:
       - "8082:80"
 
+
+  logapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
+
