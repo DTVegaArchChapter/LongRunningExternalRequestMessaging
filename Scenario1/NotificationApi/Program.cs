@@ -16,10 +16,10 @@ app.UseCors(
         });
 
 app.MapHub<NotificationHub>("/notificationHub");
-app.MapPost("/notify-clients/{requestId}", (HttpContext httpContext, string requestId, [FromBody]ProductInfo[] productInfo) =>
+app.MapPost("/notify-clients", (HttpContext httpContext, [FromBody]SearchResult searchResult) =>
     {
         var hubContext = httpContext.RequestServices.GetRequiredService<IHubContext<NotificationHub>>();
-        return hubContext.Clients.Group(requestId).SendAsync("ReceivePrice", productInfo);
+        return hubContext.Clients.Group(searchResult.RequestId).SendAsync("ReceivePrice", searchResult);
     });
 app.MapGet("/get-new-guid", () => Guid.NewGuid().ToString("N"));
 app.Run();
@@ -39,4 +39,5 @@ public class NotificationHub : Hub
     }
 }
 
-internal record ProductInfo(string Store, string Name, decimal Price);
+internal sealed record ProductInfo(string Store, string Name, decimal Price);
+internal sealed record SearchResult(string RequestId, DateTime StartTime, DateTime EndTime, int DurationInMs, ProductInfo[] Products);

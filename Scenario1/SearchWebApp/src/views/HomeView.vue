@@ -42,6 +42,13 @@ import { Options, Vue } from 'vue-class-component';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/css/index.css';
+interface SearchResult {
+  requestId: string,
+  startTime: Date,
+  endTime: Date,
+  durationInMs: number,
+  products: ProductInfo[]
+}
 interface ProductInfo {
     store: string;
     name: string;
@@ -71,9 +78,23 @@ export default class HomeView extends Vue {
       .withUrl(`http://localhost:8082/notificationHub?request-id=${this.requestId}`)
       .build();
 
-    connection.on("ReceivePrice", (data: ProductInfo[]) => {
+    connection.on("ReceivePrice", (data: SearchResult) => {
+      fetch('http://localhost:8083/Add', {
+        method: 'POST',
+        cache: 'no-cache',
+        headers: {
+          'content-type': 'application/json;charset=UTF-8',
+        },
+        body: JSON.stringify({
+          requestId: data.requestId,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          durationInMs: data.durationInMs
+        })
+      });
+
       this.searchResult = [];
-      this.searchResult.push(...data);
+      this.searchResult.push(...data.products);
       this.isLoading = false;
     });
 

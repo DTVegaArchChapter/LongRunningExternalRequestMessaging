@@ -85,6 +85,8 @@ services:
 
   logapi:
     image: ${DOCKER_REGISTRY-}logapi
+    depends_on:
+      - elasticsearch
     build:
       context: .
       dockerfile: LogApi/Dockerfile

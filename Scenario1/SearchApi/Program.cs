@@ -27,7 +27,7 @@ app.MapGet("/search-product/{id}/{requestId}", (int id, string requestId, IConne
                 "",
                 "Search",
             null,
-                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new SearchInfo(id, requestId))));
+                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new SearchInfo(id, requestId, DateTime.Now))));
         }
 
         return Results.Ok();
@@ -35,4 +35,4 @@ app.MapGet("/search-product/{id}/{requestId}", (int id, string requestId, IConne
 
 app.Run();
 
-internal record SearchInfo(int ProductId, string RequestId);
+internal record SearchInfo(int ProductId, string RequestId, DateTime StartTime);
