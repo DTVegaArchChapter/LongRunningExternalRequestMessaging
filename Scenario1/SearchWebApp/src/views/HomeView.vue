@@ -42,6 +42,13 @@ import { Options, Vue } from 'vue-class-component';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/css/index.css';
+interface SearchResult {
+  clientId: string,
+  startTime: Date,
+  endTime: Date,
+  durationInMs: number,
+  products: ProductInfo[]
+}
 interface ProductInfo {
     store: string;
     name: string;
@@ -58,7 +65,7 @@ export default class HomeView extends Vue {
   searchResult: ProductInfo[] = [];
   isLoading = false;
   isSeachButtonDisabled = true;
-  requestId = "";
+  clientId = "";
 
   mounted() {
     this.connectToNotificationHub();
@@ -66,14 +73,28 @@ export default class HomeView extends Vue {
 
   private async connectToNotificationHub() {
     const response = await fetch(`http://localhost:8082/get-new-guid`);
-    this.requestId = await response.text();
+    this.clientId = await response.text();
     const connection = new HubConnectionBuilder()
-      .withUrl(`http://localhost:8082/notificationHub?request-id=${this.requestId}`)
+      .withUrl(`http://localhost:8082/notificationHub?client-id=${this.clientId}`)
       .build();
 
-    connection.on("ReceivePrice", (data: ProductInfo[]) => {
+    connection.on("ReceivePrice", (data: SearchResult) => {
+      fetch('http://localhost:8083/Add', {
+        method: 'POST',
+        cache: 'no-cache',
+        headers: {
+          'content-type': 'application/json;charset=UTF-8',
+        },
+        body: JSON.stringify({
+          clientId: data.clientId,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          durationInMs: data.durationInMs
+        })
+      });
+
       this.searchResult = [];
-      this.searchResult.push(...data);
+      this.searchResult.push(...data.products);
       this.isLoading = false;
     });
 
@@ -84,7 +105,7 @@ export default class HomeView extends Vue {
   search(): void {
     if (this.selectedProduct) {
       this.isLoading = true;
-      fetch(`http://localhost:8081/search-product/${this.selectedProduct}/${this.requestId}`)
+      fetch(`http://localhost:8081/search-product/${this.selectedProduct}/${this.clientId}`)
     }
   }
 }
