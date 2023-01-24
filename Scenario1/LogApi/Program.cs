@@ -6,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IElasticClient>(_ => new ElasticClient(new ConnectionSettings(new Uri("http://elasticsearch:9200"))
-    .BasicAuthentication("elastic", "Password1")
     .DefaultIndex("request")
     .DefaultMappingFor<RequestInfo>(x => x.IdProperty(y => y.RequestId).IndexName("request"))));
 builder.Services.AddCors();

@@ -23,9 +23,20 @@ services:
       - "9300:9300"
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - ELASTIC_PASSWORD=Password1
+      - xpack.security.enabled=false
       - discovery.type=single-node
       - bootstrap.memory_lock=true
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.6.0
+    volumes:
+      - kibana:/usr/share/kibana/data
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
 
   searchapi:
     image: ${DOCKER_REGISTRY-}searchapi
@@ -95,4 +106,6 @@ volumes:
   rabbitmq:
     driver: local
   elasticsearch:
+    driver: local
+  kibana:
     driver: local
