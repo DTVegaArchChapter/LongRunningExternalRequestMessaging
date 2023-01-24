@@ -19,8 +19,8 @@ public class Worker : BackgroundService
     private static readonly HttpClient _httpClient = new();
 
     private sealed record ProductInfo(string Store, string Name, decimal Price);
-    private sealed record SearchResult(string RequestId, DateTime StartTime, DateTime EndTime, int DurationInMs, ProductInfo[] Products);
-    private sealed record SearchInfo(int ProductId, string RequestId, DateTime StartTime);
+    private sealed record SearchResult(string ClientId, DateTime StartTime, DateTime EndTime, int DurationInMs, ProductInfo[] Products);
+    private sealed record SearchInfo(int ProductId, string ClientId, DateTime StartTime);
 
     public Worker(ILogger<Worker> logger, IConnection connection, IConfiguration configuration)
     {
@@ -50,7 +50,7 @@ public class Worker : BackgroundService
                             var responseBody = await response.Content.ReadFromJsonAsync<ProductInfo>(cancellationToken: stoppingToken);
 
                             var endTime = DateTime.Now;
-                            using var notificationResponse = await _httpClient.PostAsJsonAsync($"http://notificationapi/notify-clients", new SearchResult(searchInfo.RequestId, searchInfo.StartTime, endTime, (int)(endTime - searchInfo.StartTime).TotalMilliseconds, new[] { responseBody! }), stoppingToken);
+                            using var notificationResponse = await _httpClient.PostAsJsonAsync($"http://notificationapi/notify-clients", new SearchResult(searchInfo.ClientId, searchInfo.StartTime, endTime, (int)(endTime - searchInfo.StartTime).TotalMilliseconds, new[] { responseBody! }), stoppingToken);
                             notificationResponse.EnsureSuccessStatusCode();
 
                             model.BasicAck(e.DeliveryTag, false);

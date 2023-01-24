@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddSingleton<IElasticClient>(_ => new ElasticClient(new ConnectionSettings(new Uri("http://elasticsearch:9200"))
     .DefaultIndex("request")
-    .DefaultMappingFor<RequestInfo>(x => x.IdProperty(y => y.RequestId).IndexName("request"))));
+    .DefaultMappingFor<RequestDocument>(x => x.IdProperty(y => y.Id).IndexName("request"))));
 builder.Services.AddCors();
 
 var app = builder.Build();
@@ -23,10 +23,11 @@ app.MapPost(
     (HttpContext httpContext, [FromBody]RequestInfo requestInfo) =>
         {
             var elasticClient = httpContext.RequestServices.GetRequiredService<IElasticClient>();
-            elasticClient.IndexDocumentAsync(requestInfo);
+            elasticClient.IndexDocumentAsync(new RequestDocument(Guid.NewGuid().ToString("N"), requestInfo.ClientId, requestInfo.StartTime, requestInfo.EndTime, requestInfo.DurationInMs));
             return Results.Ok();
         });
 
 app.Run();
 
-internal sealed record RequestInfo(string RequestId, DateTime StartTime, DateTime EndTime, int DurationInMs);
+internal sealed record RequestDocument(string Id, string ClientId, DateTime StartTime, DateTime EndTime, int DurationInMs);
+internal sealed record RequestInfo(string ClientId, DateTime StartTime, DateTime EndTime, int DurationInMs);

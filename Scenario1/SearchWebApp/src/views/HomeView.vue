@@ -43,7 +43,7 @@ import { HubConnectionBuilder } from '@microsoft/signalr';
 import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/css/index.css';
 interface SearchResult {
-  requestId: string,
+  clientId: string,
   startTime: Date,
   endTime: Date,
   durationInMs: number,
@@ -65,7 +65,7 @@ export default class HomeView extends Vue {
   searchResult: ProductInfo[] = [];
   isLoading = false;
   isSeachButtonDisabled = true;
-  requestId = "";
+  clientId = "";
 
   mounted() {
     this.connectToNotificationHub();
@@ -73,9 +73,9 @@ export default class HomeView extends Vue {
 
   private async connectToNotificationHub() {
     const response = await fetch(`http://localhost:8082/get-new-guid`);
-    this.requestId = await response.text();
+    this.clientId = await response.text();
     const connection = new HubConnectionBuilder()
-      .withUrl(`http://localhost:8082/notificationHub?request-id=${this.requestId}`)
+      .withUrl(`http://localhost:8082/notificationHub?client-id=${this.clientId}`)
       .build();
 
     connection.on("ReceivePrice", (data: SearchResult) => {
@@ -86,7 +86,7 @@ export default class HomeView extends Vue {
           'content-type': 'application/json;charset=UTF-8',
         },
         body: JSON.stringify({
-          requestId: data.requestId,
+          clientId: data.clientId,
           startTime: data.startTime,
           endTime: data.endTime,
           durationInMs: data.durationInMs
@@ -105,7 +105,7 @@ export default class HomeView extends Vue {
   search(): void {
     if (this.selectedProduct) {
       this.isLoading = true;
-      fetch(`http://localhost:8081/search-product/${this.selectedProduct}/${this.requestId}`)
+      fetch(`http://localhost:8081/search-product/${this.selectedProduct}/${this.clientId}`)
     }
   }
 }
